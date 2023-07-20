@@ -7,5 +7,7 @@ client = Mysql2::Client.new(host: "db09.blockshopper.com", username: ENV['DB09_L
 
 get_teacher(3, client)
 get_subject_teachers(1, client)
+get_class_subjects('Math', client)
+get_teachers_list_by_letter('Joao', 'Barbosa', client)
 
 client.close
