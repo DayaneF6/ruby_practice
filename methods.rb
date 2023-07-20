@@ -9,7 +9,7 @@ def get_teacher(id, client)
   end
 end
 
-def get_subject_teachers(subject_id, client)
+def get_subject_teachers(id, client)
   # Get subject name
   subject_query = "SELECT name FROM subjects_dayane WHERE ID = #{id}"
   subject_result = client.query(subject_query).to_a
@@ -19,10 +19,10 @@ def get_subject_teachers(subject_id, client)
     return
   end
 
-  subject_name = subject_result[0]['subject_name']
+  name = subject_result[0]['name']
 
   # Get teachers for the subject
-  teachers_query = "SELECT t.first_name, t.middle_name, t.last_name FROM teachers_dayane t JOIN subjects_dayane st ON t.ID = st.teacher_id WHERE st.id = #{id}"
+  teachers_query = "SELECT t.first_name, t.middle_name, t.last_name FROM teachers_dayane t JOIN subjects_dayane st ON t.ID = st.id WHERE st.id = #{id}"
   teachers_result = client.query(teachers_query).to_a
 
   if teachers_result.empty?
@@ -30,7 +30,7 @@ def get_subject_teachers(subject_id, client)
     return
   end
 
-  puts "Subject: #{subject_name}"
+  puts "Subject: #{name}"
   puts "Teachers:"
 
   teachers_result.each do |teacher|
