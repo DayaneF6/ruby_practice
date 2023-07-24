@@ -82,26 +82,70 @@ def set_md5(client)
 end
 
 
-
-#not finished
-
-def get_class_info(id, client)
+=begin def get_class_info(id, client)
   c = "SELECT t.first_name, t.middle_name, t.last_name, c.name FROM teachers_dayane t
       JOIN teachers_classes_dayane tc ON t.subject_id = tc.teacher_id
-      JOIN classes_dayane c ON tc.class_id = c.id WHERE tc.id = \"#{id}\""
+      JOIN classes_dayane c ON tc.class_id = c.id WHERE tc.class_id = \"#{id}\";"
   results = client.query(c).to_a
 
   if results.empty?
     p "Class with #{id} was not found."
   else
-    string = "Class name: #{results[0]['name']}\nTeachers:"
+    string = "Class name: #{results[0]['name']}\nResponsible Teacher:"
     results.each do |row|
       string += "#{row['first_name']} #{row['middle_name']} #{row['last_name']}\n"
     end
     puts string
 
   end
+end
+=end
+def get_class_info(class_id, client)
+  involved_teachers = "SELECT c.name, t.first_name, t.last_name
+   FROM teachers_classes_dayane AS tc
+     JOIN classes_dayane AS c
+     ON tc.class_id = c.id
+     JOIN teachers_dayane AS t
+     ON tc.teacher_id = t.id
+     WHERE c.id = #{class_id};"
 
+  responsible_teacher = "SELECT c.name, t.first_name, t.last_name
+   FROM classes_dayane AS c
+     JOIN teachers_dayane AS t
+       ON c.responsible_teacher_id = t.id
+   WHERE c.id = #{class_id};"
+
+  results_involved = client.query(involved_teachers).to_a
+  results_responsible = client.query(responsible_teacher).to_a
+
+  if results_involved.empty? || results_responsible.empty?
+    puts "There are no involved or responsible teachers in class with id #{class_id}"
+  else
+    string = "Class name: #{results_responsible[0]['name']}\nResponsible teacher: #{results_responsible[0]['first_name']} #{results_responsible[0]['last_name']}\nInvolved teachers:\n"
+
+    results_involved.each do |row|
+      string += "#{row['first_name']} #{row['last_name']}\n"
+    end
+
+    puts string.strip
+  end
+end
+
+def get_teachers_by_year(year, client)
+  year_t = "SELECT t.first_name, t.last_name FROM teachers_dayane t WHERE YEAR(birth_date) = \"#{year}\";"
+  results = client.query(year_t).to_a
+
+  if results.empty?
+    p "There are no teachers born in #{year}"
+  else
+    string = ""
+
+    results.each do |row|
+      string += "Teachers born in #{year}: #{row['first_name']} #{row['last_name']}"
+
+    end
+    p string
+  end
 end
 
 

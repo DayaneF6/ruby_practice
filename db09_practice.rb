@@ -9,7 +9,9 @@ get_subject_teachers(1, client)
 get_class_subjects('Math', client)
 get_teachers_list_by_letter('Joao', 'Barbosa', client)
 set_md5(client)
-=end
 get_class_info(3, client)
+=end
+
+get_teachers_by_year(1997, client)
 
 client.close
