@@ -24,7 +24,7 @@ def get_subject_teachers(id, client)
   if results.empty?
     p "Subject with ID #{id} was not found."
   else
-    string = "Subject: #{results[0]['name']}\nTeachers:"
+    string = "Subject: #{results[0]['name']}\nTeachers:\n"
     results.each do |row|
       string += "#{row['first_name']} #{row['middle_name']} #{row['last_name']}\n"
     end
@@ -34,14 +34,23 @@ def get_subject_teachers(id, client)
 end
 
 def get_class_subjects(name, client)
-    c = "SELECT c.name, td.first_name, td.middle_name, td.last_name FROM classes_dayane c
-         JOIN teachers_dayane td ON td.id = c.responsible_teacher_id WHERE name = \"#{name}\""
+  c = "SELECT s.name subject, c.name class, td.first_name, td.middle_name, td.last_name
+    FROM classes_dayane c
+    JOIN teachers_classes_dayane tc
+      ON tc.class_id = c.id
+    JOIN teachers_dayane td
+      ON tc.teacher_id = td.id
+    JOIN subjects_dayane s
+      ON s.id = td.subject_id
+    WHERE c.name = \"#{name}\"";
+    # c = "SELECT c.name, td.first_name, td.middle_name, td.last_name FROM classes_dayane c
+    #      JOIN teachers_dayane td ON td.id = c.responsible_teacher_id WHERE name = \"#{name}\""
     results = client.query(c).to_a
 
     if results.empty?
       p "Class with name #{name} was not found."
     else
-      string = "Class: #{results[0]['name']}\nTeachers:"
+      string = "Class: #{results[0]['class']}\nSubject: #{results[0]['subject']}\nTeachers:\n"
       results.each do |row|
         string += "#{row['first_name']} #{row['middle_name']} #{row['last_name']}\n"
       end
@@ -50,15 +59,15 @@ def get_class_subjects(name, client)
     end
 end
 
-def get_teachers_list_by_letter(letter1, letter2, client)
+def get_teachers_list_by_letter(letter, client)
   tl = "SELECT s.name, t.first_name, t.middle_name, t.last_name FROM teachers_dayane t
-        JOIN subjects_dayane s ON t.id = s.id WHERE t.first_name
-        LIKE '%#{letter1}%' AND t.last_name LIKE '%#{letter2}%'"
+        JOIN subjects_dayane s ON t.subject_id = s.id WHERE t.first_name
+        LIKE '%#{letter}%' OR t.last_name LIKE '%#{letter}%'"
 
   results = client.query(tl).to_a
 
   if results.empty?
-    p "Teacher with name #{letter1} #{letter1}  was not found."
+    p "Teacher with name #{letter} was not found."
   else
     string = "Subject: #{results[0]['name']}\nTeachers:"
     results.each do |row|
