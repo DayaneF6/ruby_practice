@@ -161,15 +161,17 @@ def random_last_names(n, client)
 end
 
 def random_first_names(n, client)
-  query = <<~SQL
-      SELECT * FROM last_names
+  q = <<~SQL
+    SELECT names FROM female_names
+    UNION
+    SELECT FirstName FROM male_names
+    ORDER BY RAND()
+    LIMIT #{n}
   SQL
-  results = client.query(query).to_a.map{ |el| el['first_name'] } # turn it into an array of names
-  random_names = []
-  n.times do
-    random_names << results.sample
-  end
-  random_names
+
+  results = client.query(q).to_a
+
+  results.map { |row| row['names'] }
 end
 
 def generate_random_people(client, n)
