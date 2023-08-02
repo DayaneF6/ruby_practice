@@ -151,29 +151,39 @@ end
 
 def random_last_names(n, client)
   query = <<~SQL
-      SELECT last_name
-      FROM teachers_dayane
-      ORDER BY RAND()
-      LIMIT 1
+      SELECT * FROM last_names
   SQL
-  result = client.query(query)
-  # result['last_name']
-  result.map { |row| row['last_name'] }
+  results = client.query(query).to_a.map{ |el| el['last_name'] } # turn it into an array of names
+  random_names = []
+  n.times do
+    random_names << results.sample
+  end
+  random_names
 end
 
 def random_first_names(n, client)
   query = <<~SQL
-      SELECT first_name
-      FROM teachers_dayane
-      ORDER BY RAND()
-      LIMIT 1
+      SELECT * FROM last_names
   SQL
-  result = client.query(query)
-  # result['first_name']
-  result.map { |row| row['first_name'] }
+  results = client.query(query).to_a.map{ |el| el['first_name'] } # turn it into an array of names
+  random_names = []
+  n.times do
+    random_names << results.sample
+  end
+  random_names
 end
 
 def generate_random_people(client, n)
+  create_table = <<~SQL
+    CREATE TABLE IF NOT EXISTS random_people_dayane (
+    id bigint(20) AUTO_INCREMENT PRIMARY KEY,
+    first_name VARCHAR(50),
+    last_name VARCHAR(70),
+    birth_date DATE
+    );
+  SQL
+
+  client.query(create_table)
 
   first_names = random_first_names(n, client)
   last_names = random_last_names(n, client)
@@ -186,7 +196,7 @@ def generate_random_people(client, n)
   # data is an array of arrays with first_name, last_name and birth_date keys
   data = first_names.zip(last_names).zip(birth_dates).map(&:flatten)
 
-  data.each_slice(20000) do |group|
+  data.each_slice(10000) do |group|
     insert = "INSERT INTO random_people_dayane (first_name, last_name, birth_date) VALUES "
 
     # row is ["Name1", "Lastname", "2001-06-01"]
