@@ -140,7 +140,6 @@ end
 
 #--------------------------------------------------------------------------------------------------------------------------------------
 #exercicio para gerar registros na tabela
-# não finalizado ainda
 
 def random_date(st_date, end_date)
   st_date = Date.parse('1923-01-01')
