@@ -15,6 +15,8 @@ get_class_info(3, client)
 get_teachers_by_year(1997, client)
 =end
 
-generate_random_people(client, 1)
+#generate_random_people(client, 10)
+clean_school_districts(client)
+# delete_duplicate(client)
 
 client.close

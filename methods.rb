@@ -217,6 +217,92 @@ end
 #       random_people(n - 20000, client)
 #   end
 # end
+#-----------------------------------------------------------------------------------------------------------------------------------
+#exercicio montana
 
+def create_montana_table (client)
+  create_table = <<~SQL
+    CREATE TABLE IF NOT EXISTS montana_public_district_report_card__uniq_dist_dayane (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      name VARCHAR(255),
+      clean_name VARCHAR(255),
+      address VARCHAR(255),
+      city VARCHAR(255),
+      state VARCHAR(10),
+      zip INT,
+      UNIQUE KEY unique_district (name, address, city, state, zip)
+    );
+  SQL
 
+  client.query(create_table)
+end
+
+#primeira tentativa
+# def unique_tables(client)
+#     table = <<~SQL
+#       SELECT school_name, address, city, state, zip FROM montana_public_district_report_card;
+#     SQL
+#     result = client.query(table)
+#
+#     #inserir na tabela
+#     result.each do |row|
+#       insert_table = <<~SQL
+#         (
+#         INSERT INTO montana_public_district_report_card__uniq_dist_dayane (name, address, city, state, zip)
+#         VALUES ( '#{row['school_name']}', '#{row['address']}', '#{row['city']}', '#{row['state']}', '#{row['zip']}' )
+#         );
+#       SQL
+#       client.query(insert_table)
+#     end
+# end
+
+def clean_school_districts(client)
+
+  create_montana_table (client)
+
+    insert_data = <<~SQL
+      INSERT IGNORE INTO montana_public_district_report_card__uniq_dist_dayane (name, address, city, state, zip)
+        SELECT DISTINCT school_name, address, city, state, zip
+        FROM montana_public_district_report_card;
+    SQL
+
+  client.query(insert_data)
+
+    query = <<~SQl
+      SELECT name FROM montana_public_district_report_card__uniq_dist_dayane WHERE clean_name IS NULL;
+    SQl
+
+  result = client.query(query)
+
+  result.each do |row|
+    name = row['name']
+    clean_name = name.gsub(/\bElem\b/, 'Elementary School').gsub(/\bH S\b/, 'High School').gsub(/\bK-12\b/, 'Public School')+ ' District'
+
+    query_update = "UPDATE montana_public_district_report_card__uniq_dist_dayane SET clean_name = '#{clean_name}' WHERE name = '#{name}'"
+    client.query(query_update)
+  end
+
+end
+
+def delete_duplicate(client)
+  select_q = <<~SQL
+    SELECT name FROM montana_public_district_report_card__uniq_dist_dayane;
+  SQL
+
+  result = client.query(select_q)
+
+  #limpar 'schools' repetidos
+  result.each do |row|
+    name = row['name']
+    clean = name.gsub(/\bschools?\b/i, '')
+
+    update_q = <<~SQL
+      UPDATE montana_public_district_report_card__uniq_dist_dayane
+      SET clean_name = '#{clean}'
+      WHERE name = '#{name}';
+      SQL
+
+    client.query(update_q)
+  end
+end
 
