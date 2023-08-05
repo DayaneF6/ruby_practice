@@ -315,25 +315,3 @@ def clean_school_districts(client)
 # not completed
 
 
-def update_select_names(client)
-  #get the candidate office names
-  select_name = <<~SQL
-    SELECT candidate_office_name FROM hle_dev_test_dayane_santos;
-  SQL
-
-  result = client.query(select_name)
-
-  result.map do |row|
-    name = row['candidate_office_name']
-    up_candidate = name.gsub(/\bCounty Clerk\/Recorder\/DeKalb County\b/, "DeKalb County clerk and recorder")
-
-    update_query = <<~SQL
-      UPDATE hle_dev_test_dayane_santos
-      SET clean_name = '#{up_candidate}'
-      WHERE candidate_office_name = '#{name}';
-    SQL
-
-    client.query(update_query)
-    end
-
-end
