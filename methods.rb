@@ -276,33 +276,37 @@ def clean_school_districts(client)
 
   result.each do |row|
     name = row['name']
-    clean_name = name.gsub(/\bElem\b/, 'Elementary School').gsub(/\bH S\b/, 'High School').gsub(/\bK-12\b/, 'Public School')+ ' District'
+    clean_name = name.gsub(/\bElem\b|\bEl\b/, "Elementary School")
+                     .gsub(/H S|\bHS\b/, "High School")
+                     .gsub(/K-12|K-12 Schools/, "Public School")
+                     .gsub(/\b(\w+)(\s(\1\b))+/, '\1')
+                     .gsub(/School (\w+) (School)/, '\1 \2') + ' District'
 
     query_update = "UPDATE montana_public_district_report_card__uniq_dist_dayane SET clean_name = '#{clean_name}' WHERE name = '#{name}'"
     client.query(query_update)
   end
 
+  # select_q = <<~SQL
+  #   SELECT name FROM montana_public_district_report_card__uniq_dist_dayane;
+  # SQL
+  #
+  # result = client.query(select_q)
+  #
+  # #limpar 'schools' repetidos
+  # result.each do |row|
+  #   name = row['name']
+  #   clean = name.gsub(/\b(\w+)(\s(\1\b))+/, '\1').gsub(/School (\w+) (School)/, '\1 \2')
+  #
+  #   update_q = "UPDATE montana_public_district_report_card__uniq_dist_dayane SET clean_name = '#{clean}' WHERE name = '#{name}'"
+  #
+  #   client.query(update_q)
+  # end
+
 end
 
-def delete_duplicate(client)
-  select_q = <<~SQL
-    SELECT name FROM montana_public_district_report_card__uniq_dist_dayane;
-  SQL
+#------------------------------------------------------------------------------------------------------------------------------
+# test:
+# not completed
 
-  result = client.query(select_q)
 
-  #limpar 'schools' repetidos
-  result.each do |row|
-    name = row['name']
-    clean = name.gsub(/\bschools?\b/i, '')
-
-    update_q = <<~SQL
-      UPDATE montana_public_district_report_card__uniq_dist_dayane
-      SET clean_name = '#{clean}'
-      WHERE name = '#{name}';
-      SQL
-
-    client.query(update_q)
-  end
-end
 
