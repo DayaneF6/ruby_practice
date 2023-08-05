@@ -272,18 +272,22 @@ def clean_school_districts(client)
       SELECT name FROM montana_public_district_report_card__uniq_dist_dayane WHERE clean_name IS NULL;
     SQl
 
-  result = client.query(query)
+  results = client.query(query)
 
-  result.each do |row|
+  results.map do |row|
     name = row['name']
-    clean_name = name.gsub(/\bElem\b|\bEl\b/, "Elementary School")
-                     .gsub(/H S|\bHS\b/, "High School")
-                     .gsub(/K-12|K-12 Schools/, "Public School")
-                     .gsub(/\b(\w+)(\s(\1\b))+/, '\1')
+    clean = name.gsub(/\bElem\b|\bEl\b/, "Elementary School").gsub(/H S|\bHS\b/, "High School")
+                     .gsub(/K-12|K-12 Schools/, "Public School").gsub(/\b(\w+)(\s(\1\b))+/, '\1')
                      .gsub(/School (\w+) (School)/, '\1 \2') + ' District'
 
-    query_update = "UPDATE montana_public_district_report_card__uniq_dist_dayane SET clean_name = '#{clean_name}' WHERE name = '#{name}'"
-    client.query(query_update)
+    update_q = <<~SQL
+        UPDATE montana_public_district_report_card__uniq_dist_dayane
+        SET clean_name = '#{clean}'
+        WHERE name = '#{name}'
+    SQL
+
+    client.query(update_q)
+    end
   end
 
   # select_q = <<~SQL
@@ -297,16 +301,38 @@ def clean_school_districts(client)
   #   name = row['name']
   #   clean = name.gsub(/\b(\w+)(\s(\1\b))+/, '\1').gsub(/School (\w+) (School)/, '\1 \2')
   #
-  #   update_q = "UPDATE montana_public_district_report_card__uniq_dist_dayane SET clean_name = '#{clean}' WHERE name = '#{name}'"
-  #
+  #   update_q = <<~SQL
+  #   UPDATE montana_public_district_report_card__uniq_dist_dayane
+  #   SET clean_name = '#{clean}'
+  #   WHERE name = '#{name}'
+  #  SQL
   #   client.query(update_q)
   # end
 
-end
 
 #------------------------------------------------------------------------------------------------------------------------------
 # test:
 # not completed
 
 
-
+# def update_select_names(client)
+#   #get the candidate office names
+#   select_name = <<~SQL
+#     SELECT candidate_office_name FROM hle_dev_test_dayane_santos;
+#   SQL
+#
+#   result = client.query(select_name)
+#
+#   result.map do |row|
+#     name = row['candidate_office_name']
+#     up_candidate = name.gsub(//)
+#
+#     update_query = <<~SQL
+#       UPDATE montana_public_district_report_card__uniq_dist_dayane
+#       SET clean_name = '#{up_candidate}'
+#       WHERE name = '#{row['candidate_office_name']}';
+#     SQL
+#
+#     client.query(update_query)
+#
+# end
