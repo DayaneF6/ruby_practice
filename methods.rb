@@ -312,6 +312,89 @@ def clean_school_districts(client)
 
 #------------------------------------------------------------------------------------------------------------------------------
 # test:
-# not completed
+# completed
 
+def create_table(client)
+  begin
+    # criar a tabela
+    create_table = <<~SQL
+      CREATE TABLE IF NOT EXISTS hle_dev_test_dayane_santos AS
+      SELECT * FROM hle_dev_test_candidates
+    SQL
 
+    client.query(create_table)
+
+    # Se a criação da tabela for bem, adiciona as colunas
+    alter_table = <<~SQL
+      ALTER TABLE hle_dev_test_dayane_santos ADD COLUMN (clean_name VARCHAR(255), sentence VARCHAR(255));
+    SQL
+
+    client.query(alter_table)
+
+  rescue Mysql2::Error => e
+    #mostra uma mensagem de erro caso necessário
+    p "Erro: #{e.message}"
+  end
+end
+
+def escape(str)
+  str = str.to_s
+  return str if str == ''
+  return if str == ''
+  str.gsub(/\\/, '\&\&').gsub(/'/, "''")
+end
+
+def update_select_names(client)
+
+  create_table(client)
+
+  # a) get the candidate office names
+  select_name = <<~SQL
+    SELECT candidate_office_name FROM hle_dev_test_dayane_santos WHERE clean_name IS NULL;
+  SQL
+
+  result = client.query( select_name ).to_a
+
+  # b)
+  result.each do | row |
+    name = row['candidate_office_name']
+    up_candidate = name.downcase #ii
+                       .gsub(/\bCounty Clerk\/Recorder\/DeKalb County\b/i, "DeKalb County clerk and recorder") #i
+                       .gsub(/\bTwp\b/i, "Township") #v
+                       .gsub(/\bHwy\b|\bhighway\b/i, "Highway") #vi vii
+                       # .gsub(/\b(\w+),\s*(\w+)\b/) { |match| "(#{match[0]} #{match[1]})" }
+                       .gsub(/\b(\w+),\s*(\w+)\b/) do |match| #iv
+                          word1 = $1.capitalize
+                          word2 = $2.capitalize
+                          "(#{word1} #{word2})"
+                       end
+                       .gsub(/\.$/, '') # viii
+                       .gsub(/(.+)\/(.+)/) { |match| "#{$2.capitalize} #{$1.downcase}" } # iii
+                       .gsub(/\//) { |match| '' }
+
+    # c)
+    update_query = <<~SQL
+      UPDATE hle_dev_test_dayane_santos
+      SET clean_name = '#{escape(up_candidate)}'
+      WHERE candidate_office_name = '#{escape(name)}'
+    SQL
+
+    client.query(update_query)
+  end
+
+  # d)
+  sentence_query = <<~SQL
+      SELECT sentence FROM hle_dev_test_dayane_santos;
+    SQL
+
+    client.query(sentence_query)
+
+    #concatenação
+    update_sentence = <<~SQL
+      UPDATE hle_dev_test_dayane_santos
+      SET sentence = CONCAT("The candidate is running for the ", clean_name, " office.")
+    SQL
+
+  client.query(update_sentence)
+
+end
