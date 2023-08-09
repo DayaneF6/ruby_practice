@@ -362,15 +362,13 @@ def update_select_names(client)
                        .gsub(/\bCounty Clerk\/Recorder\/DeKalb County\b/i, "DeKalb County clerk and recorder") #i
                        .gsub(/\bTwp\b/i, "Township") #v
                        .gsub(/\bHwy\b|\bhighway\b/i, "Highway") #vi vii
-                       # .gsub(/\b(\w+),\s*(\w+)\b/) { |match| "(#{match[0]} #{match[1]})" }
-                       .gsub(/\b(\w+),\s*(\w+)\b/) do |match| #iv
-                          word1 = $1.capitalize
-                          word2 = $2.capitalize
-                          "(#{word1} #{word2})"
-                       end
                        .gsub(/\.$/, '') # viii
-                       .gsub(/(.+)\/(.+)/) { |match| "#{$2.capitalize} #{$1.downcase}" } # iii
+                       .gsub(/(.+)\/(.+)/) { |match| "#{$2.capitalize} #{$1.capitalize}" } # iii
                        .gsub(/\//) { |match| '' }
+                       .gsub(/(\w+),\s*(.*)/){ "#{$1} (#{$2.split.map(&:capitalize).join(' ')})" }
+                       .gsub(/\,/, '') # delete comma
+                       .gsub(/\b(\w+)\b(?=.*\b\1\b)/i, '') #Remove consecutive duplicate words
+                       .strip.gsub(/\s+/, ' ') #Remove trailing spaces at beginning and end
 
     # c)
     update_query = <<~SQL
@@ -398,3 +396,5 @@ def update_select_names(client)
   client.query(update_sentence)
 
 end
+
+#-------------------------------------------------------------------------------------------------------------------------
