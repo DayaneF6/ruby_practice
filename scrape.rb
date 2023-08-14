@@ -48,13 +48,14 @@ def create_table(client)
   begin
     # criar a tabela
     create_table = <<~SQL
-      CREATE TABLE IF NOT EXISTS scrape_db09_dayane (
+      CREATE TABLE scrape_db09_dayane (
       Id INT AUTO_INCREMENT PRIMARY KEY,
       Country VARCHAR(255),
       Population VARCHAR(255),
       Percent VARCHAR(255),
       Dates VARCHAR(255),
-      Source VARCHAR(255)
+      Source VARCHAR(255),
+      UNIQUE KEY unique_country (Country)
     );
     SQL
 
@@ -102,12 +103,12 @@ def populating_table(client)
     cells << names
   end
 
-  cells[5..-1].each do |row|
-    country = row[1]
+  cells[1..-1].each do |row|
+    country = row[1].strip
     population = row[2]
     percent = row[3]
     dates = row[4]
-    source = row[5]
+    source = row[5].gsub(/\[\d+\]/, '')
     added_col = <<~SQL
     INSERT INTO scrape_db09_dayane (Country, Population, Percent, Dates, Source)
     VALUES ('#{country}', '#{population}', '#{percent}', '#{dates}', '#{source}')
